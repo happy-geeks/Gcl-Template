@@ -10,13 +10,30 @@ namespace Gcl_Template
 {
     public class Startup
     {
-        public Startup(IConfiguration configuration)
+        public Startup(IWebHostEnvironment webHostEnvironment)
         {
-            Configuration = configuration;
+            // First set the base settings for the application.
+            var builder = new ConfigurationBuilder()
+                .AddJsonFile("appsettings.json", false, true)
+                .AddJsonFile($"appsettings.{webHostEnvironment.EnvironmentName}.json", true, true);
+
+            // We need to build here already, so that we can read the base directory for secrets.
+            Configuration = builder.Build();
+
+            // Get the base directory for secrets and then load the secrets file from that directory.
+            var secretsBasePath = Configuration.GetSection("GCL").GetValue<string>("SecretsBaseDirectory");
+            if (!string.IsNullOrEmpty(secretsBasePath))
+            {
+                builder
+                    .AddJsonFile($"{secretsBasePath}appsettings-secrets.json", false, false);
+
+                // Build the final configuration with all combined settings.
+                Configuration = builder.Build();
+            }
 
             // Configure Serilog
             Log.Logger = new LoggerConfiguration()
-                .ReadFrom.Configuration(configuration)
+                .ReadFrom.Configuration(Configuration)
                 .CreateLogger();
         }
 
