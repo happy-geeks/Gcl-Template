@@ -22,7 +22,7 @@ namespace Gcl_Template
 
             // Get the base directory for secrets and then load the secrets file from that directory.
             var secretsBasePath = Configuration.GetSection("GCL").GetValue<string>("SecretsBaseDirectory");
-            if (!string.IsNullOrEmpty(secretsBasePath))
+            if (!String.IsNullOrEmpty(secretsBasePath))
             {
                 builder
                     .AddJsonFile($"{secretsBasePath}appsettings-secrets.json", false, false);
