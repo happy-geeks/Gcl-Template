@@ -25,7 +25,8 @@ namespace Gcl_Template
             if (!String.IsNullOrEmpty(secretsBasePath))
             {
                 builder
-                    .AddJsonFile($"{secretsBasePath}appsettings-secrets.json", false, false);
+                    .AddJsonFile($"{secretsBasePath}appsettings-secrets.json", false, false)
+                    .AddJsonFile($"appsettings.{webHostEnvironment.EnvironmentName}.json", true, true);
 
                 // Build the final configuration with all combined settings.
                 Configuration = builder.Build();
