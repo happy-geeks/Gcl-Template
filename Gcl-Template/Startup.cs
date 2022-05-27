@@ -49,9 +49,6 @@ namespace Gcl_Template
             // Add Serilog.
             services.AddLogging((builder) => { builder.AddSerilog(); });
 
-            // Enable sessions and set the default timeout to 30 minutes.
-            services.AddSession(options => { options.IdleTimeout = TimeSpan.FromMinutes(30); });
-
             // Add all GCL services.
             services.AddGclServices(Configuration);
 
