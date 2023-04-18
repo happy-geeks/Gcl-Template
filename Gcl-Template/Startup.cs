@@ -2,6 +2,8 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using System;
+using System.Linq;
+using System.Reflection;
 using GeeksCoreLibrary.Core.Extensions;
 using Microsoft.Extensions.Configuration;
 using Serilog;
@@ -32,14 +34,22 @@ namespace Gcl_Template
                 Configuration = builder.Build();
             }
 
-            // Configure Serilog
+            // Replace the place holder with the project name.
+            var logFileSection = Configuration.GetSection("Serilog:WriteTo");
+            var projectName = Assembly.GetEntryAssembly()?.GetName()?.Name ?? "Unknown";
+            var sections = logFileSection.GetChildren().Where(section => (section["Args:path"] ?? "").Contains("{fileName}")).ToList();
+            sections.ForEach(section => section["args:path"] = section["args:path"]!.Replace("{fileName}", $"{projectName}-{webHostEnvironment.EnvironmentName}-"));
+
+            // Configure Serilog.
             Log.Logger = new LoggerConfiguration()
                 .ReadFrom.Configuration(Configuration)
                 .CreateLogger();
+
+            Log.Logger.Debug($"----- Project {projectName} has just been (re)started. -----");
         }
 
         public IConfiguration Configuration { get; }
-        
+
         /// <summary>
         /// This method gets called by the runtime. Use this method to add services to the container.
         /// </summary>
