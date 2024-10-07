@@ -11,10 +11,4 @@
     <PackageReference Include="Serilog.AspNetCore" Version="7.0.0" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="wwwroot\contentfiles\" />
-    <Folder Include="wwwroot\css\" />
-    <Folder Include="wwwroot\scripts\" />
-  </ItemGroup>
-
 </Project>
