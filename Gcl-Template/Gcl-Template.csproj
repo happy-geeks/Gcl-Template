@@ -9,8 +9,24 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="GeeksCoreLibrary" Version="5.0.2501.1" />
+    <PackageReference Include="GeeksCoreLibrary" Version="5.0.2501.2" />
     <PackageReference Include="Serilog.AspNetCore" Version="9.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="App_Data\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Remove="App_Data\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Remove="App_Data\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="App_Data\**" />
   </ItemGroup>
 
 </Project>
