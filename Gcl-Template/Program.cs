@@ -38,4 +38,4 @@ var app = builder.Build();
 // such as controller endpoints, routing, static files middleware etc.
 app.UseGclMiddleware(builder.Environment);
 
-app.Run();
+await app.RunAsync();
