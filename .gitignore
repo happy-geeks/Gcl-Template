@@ -403,3 +403,4 @@ FodyWeavers.xsd
 
 # GCL Specific
 */App_Data/*
+*/wwwroot/PublicFiles/*
