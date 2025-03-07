@@ -1,0 +1,138 @@
+name: Automatic Dependency Update
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 0,12 * * *'  # At 12 AM and 12 PM.
+
+jobs:
+  update-dependency:
+    name: Check and update GeeksCoreLibrary dependency
+    runs-on: ubuntu-latest
+    env:
+      PROJECT_NAME: Gcl-Template    # .NET project name of this package.
+      PACKAGE_ID: GeeksCoreLibrary  # Used throughout the entire workflow.
+
+    steps:
+      - name: Get auto-release app token
+        uses: actions/create-github-app-token@v1
+        id: get-app-token
+        with:
+          app-id: ${{ vars.HAPPY_HORIZON_RELEASE_APP_ID }}
+          private-key: ${{ secrets.HAPPY_HORIZON_RELEASE_PRIVATE_KEY }}
+
+      - name: Check Out Repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ steps.get-app-token.outputs.token }}
+          fetch-depth: 0
+          ref: 'develop'
+
+      - name: Setup dotnet
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
+
+      - name: Get the latest version of dependency
+        id: fetch-version
+        run: |
+          # Use tr to transliterate all upper-case characters to lower-case.
+          PACKAGE_ID_LC=$(echo "$PACKAGE_ID" | tr '[:upper:]' '[:lower:]')
+
+          # Use the lower-case variant of the package name in the URL as NuGet requires that in some cases.
+          API_URL="https://api.nuget.org/v3-flatcontainer/$PACKAGE_ID_LC/index.json"
+
+          echo "Fetching version information for package '$PACKAGE_ID' from URL '$API_URL'"
+          RESPONSE=$(curl -s $API_URL)
+
+          if [ -z "$RESPONSE" ]; then
+            echo "Failed to fetch versions from NuGet."
+            exit 1
+          else
+            RESPONSE_ERROR=$(echo "$RESPONSE" | jq -r '.error')
+            if [ -n "$RESPONSE_ERROR" ] && [ "$RESPONSE_ERROR" != "null" ]; then
+              echo "Fetch successful, but returned error: $RESPONSE_ERROR"
+              exit 1
+            fi
+          fi
+
+          # Extract the latest version
+          LATEST_VERSION=$(echo "$RESPONSE" | jq -r '.versions[-1]')
+          echo "Latest version detected: $LATEST_VERSION"
+
+          # Save the latest version to an output
+          echo "latest_version=$LATEST_VERSION" >> $GITHUB_OUTPUT
+
+      - name: Restore dependencies
+        run: |
+          dotnet restore
+
+      - name: Check installed version of dependency
+        id: check-installed
+        run: |
+          # Get the list of installed packages
+          INSTALLED_PACKAGES=$(dotnet list package --format json || true)
+
+          if [ -z "$INSTALLED_PACKAGES" ]; then
+            echo "Failed to retrieve installed packages"
+            exit 1
+          fi
+
+          # Extract the installed version of the package
+          INSTALLED_VERSION=$(echo $INSTALLED_PACKAGES | jq -r --arg id "$PACKAGE_ID" '.projects[].frameworks[].topLevelPackages[] | select(.id == $id) | .requestedVersion')
+
+          if [ -z "$INSTALLED_VERSION" ] || [ "$INSTALLED_VERSION" = "null" ]; then
+            echo "Package $PACKAGE_ID is not currently installed."
+            INSTALLED_VERSION="0.0.0"
+          else
+            echo "Installed version of $PACKAGE_ID: $INSTALLED_VERSION"
+          fi
+
+          # Save the installed version to an output
+          echo "installed_version=$INSTALLED_VERSION" >> $GITHUB_OUTPUT
+
+      - name: Compare Installed Version with Latest Version
+        id: compare-versions
+        run: |
+          LATEST_VERSION="${{ steps.fetch-version.outputs.latest_version }}"
+          INSTALLED_VERSION="${{ steps.check-installed.outputs.installed_version }}"
+
+          echo "Latest version: $LATEST_VERSION"
+          echo "Installed version: $INSTALLED_VERSION"
+
+          if [ "$LATEST_VERSION" = "$INSTALLED_VERSION" ]; then
+            echo "proceed_with_update=0" >> $GITHUB_OUTPUT
+            echo "The latest version ($LATEST_VERSION) is already installed. No update needed."
+            exit 0
+          fi
+
+          echo "proceed_with_update=1" >> $GITHUB_OUTPUT
+          echo "A new version is available. Proceeding with the update."
+
+      - name: Update dependency version in project
+        if: steps.compare-versions.outputs.proceed_with_update == '1'
+        run: |
+          LATEST_VERSION="${{ steps.fetch-version.outputs.latest_version }}"
+          echo "Updating $PACKAGE_ID to version $LATEST_VERSION"
+
+          # Update the dependency using the .NET CLI
+          dotnet add $PROJECT_NAME package $PACKAGE_ID --version $LATEST_VERSION
+
+      - name: Commit Changes to Branches
+        if: steps.compare-versions.outputs.proceed_with_update == '1'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          LATEST_VERSION="${{ steps.fetch-version.outputs.latest_version }}"
+
+          git checkout develop
+          git pull origin develop # Ensure develop is up-to-date locally
+          git add -u
+          git commit -m "Created version $LATEST_VERSION: Update $PACKAGE_ID to version $LATEST_VERSION" || echo "No changes to commit on develop."
+          git push origin develop
+
+          git checkout main
+          git pull origin main  # Ensure main is up-to-date locally
+          git merge develop
+          git push origin main
