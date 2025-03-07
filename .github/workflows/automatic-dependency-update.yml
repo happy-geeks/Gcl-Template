@@ -26,7 +26,6 @@ jobs:
         with:
           token: ${{ steps.get-app-token.outputs.token }}
           fetch-depth: 0
-          ref: 'develop'
 
       - name: Setup dotnet
         uses: actions/setup-dotnet@v4
@@ -126,13 +125,8 @@ jobs:
 
           LATEST_VERSION="${{ steps.fetch-version.outputs.latest_version }}"
 
-          git checkout develop
-          git pull origin develop # Ensure develop is up-to-date locally
-          git add -u
-          git commit -m "Created version $LATEST_VERSION: Update $PACKAGE_ID to version $LATEST_VERSION" || echo "No changes to commit on develop."
-          git push origin develop
-
           git checkout main
-          git pull origin main  # Ensure main is up-to-date locally
-          git merge develop
+          git pull origin main # Ensure main is up-to-date locally
+          git add -u
+          git commit -m "Created version $LATEST_VERSION: Update $PACKAGE_ID to version $LATEST_VERSION" || echo "No changes to commit."
           git push origin main
