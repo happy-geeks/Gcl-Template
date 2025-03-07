@@ -128,5 +128,5 @@ jobs:
           git checkout main
           git pull origin main # Ensure main is up-to-date locally
           git add -u
-          git commit -m "Created version $LATEST_VERSION: Update $PACKAGE_ID to version $LATEST_VERSION" || echo "No changes to commit."
+          git commit -m "Update $PACKAGE_ID to version $LATEST_VERSION" || echo "No changes to commit."
           git push origin main
