@@ -5,6 +5,18 @@ VisualStudioVersion = 16.0.30914.41
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Gcl-Template", "Gcl-Template\Gcl-Template.csproj", "{B7838F7D-435F-4144-B3C2-50A04C34C52A}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "GitHub", "GitHub", "{4AA7C1FD-3DB2-4EA4-A613-B2271AAD804E}"
+	ProjectSection(SolutionItems) = preProject
+		.gitignore = .gitignore
+		.github\dependabot.yml = .github\dependabot.yml
+		.github\pull_request_template.md = .github\pull_request_template.md
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Workflows", "Workflows", "{186DCC25-3515-42D6-893B-E978B18B7677}"
+	ProjectSection(SolutionItems) = preProject
+		.github\workflows\automatic-dependency-update.yml = .github\workflows\automatic-dependency-update.yml
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,5 +33,8 @@ Global
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {18AE3540-56AE-4727-829D-B5B2C9EF1DD1}
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{186DCC25-3515-42D6-893B-E978B18B7677} = {4AA7C1FD-3DB2-4EA4-A613-B2271AAD804E}
 	EndGlobalSection
 EndGlobal
